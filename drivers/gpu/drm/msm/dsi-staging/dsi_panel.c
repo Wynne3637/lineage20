@@ -2524,6 +2524,7 @@ static int dsi_panel_parse_bl_config(struct dsi_panel *panel)
 	panel->bl_config.dcs_type_ss_eb = utils->read_bool(utils->data,
 			"qcom,mdss-dsi-bl-dcs-type-ss-eb");
 
+
 	panel->bl_config.xiaomi_f4_36_flag = utils->read_bool(utils->data,
 			"qcom,mdss-dsi-bl-xiaomi-f4-36-flag");
 
@@ -2532,6 +2533,8 @@ static int dsi_panel_parse_bl_config(struct dsi_panel *panel)
 
 	panel->bl_config.bl_remap_flag = utils->read_bool(utils->data,
 			"qcom,mdss-brightness-remap");
+
+
 
 	data = utils->get_property(utils->data, "qcom,bl-update-flag", NULL);
 	if (!data) {
