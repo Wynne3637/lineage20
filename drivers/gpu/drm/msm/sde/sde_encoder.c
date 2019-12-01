@@ -5473,7 +5473,8 @@ static const struct drm_encoder_funcs sde_encoder_funcs = {
 		.late_register = sde_encoder_late_register,
 		.early_unregister = sde_encoder_early_unregister,
 };
-struct msm_display_info *g_msm_display_info;
+
+struct msm_display_info *msm_display_info;
 struct drm_encoder *sde_encoder_init_with_ops(
 		struct drm_device *dev,
 		struct msm_display_info *disp_info,
@@ -5488,6 +5489,7 @@ struct drm_encoder *sde_encoder_init_with_ops(
 	int ret = 0, i, intf_index = INTF_MAX;
 	static int j = 0;
 	struct sde_encoder_phys *phys = NULL;
+	static int j = 0;
 
 	sde_enc = kzalloc(sizeof(*sde_enc), GFP_KERNEL);
 	if (!sde_enc) {
@@ -5556,11 +5558,13 @@ struct drm_encoder *sde_encoder_init_with_ops(
 			sde_encoder_esd_trigger_work_handler);
 
 	memcpy(&sde_enc->disp_info, disp_info, sizeof(*disp_info));
-	if( 0 == j) {
-		g_msm_display_info = &sde_enc->disp_info;
+
+	if(j == 0) {
+		msm_display_info = &sde_enc->disp_info;
 	}
 	j++;
-	pr_info("[%s] g_msm_display_info is %p",__func__, g_msm_display_info);
+	pr_debug("[%s] g_msm_display_info is %p",__func__, msm_display_info);
+
 	SDE_DEBUG_ENC(sde_enc, "created\n");
 
 	return drm_enc;
