@@ -1,0 +1,77 @@
+name: Building Kernol MIUI 
+
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 📊 Checkout Code
+      uses: actions/checkout@v4
+      
+    - name: 🗓️ Get Date
+      id: rundate
+      run:  sudo rm /etc/localtime && sudo ln -s /usr/share/zoneinfo/Asia/Jakarta /etc/localtime && echo "REPO_DATE=`date`" >> $GITHUB_OUTPUT
+    
+    - name: ♻️ Install Dependencies
+      run: |
+           echo "BUILD_TIME=$(TZ=Asia/Jakarta date "+%d-%m-%Y-%H%M")" >> $GITHUB_ENV
+           sudo apt-get update
+           sudo apt-get install -y ccache build-essential libncurses-dev bison flex libssl-dev bc crossbuild-essential-arm64 git
+
+    - name: ♻️ Fetch Toolchains
+      run: |  
+            mkdir CLANG && cd CLANG && curl -LO "https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman" && chmod a+x antman && ./antman -S && ./antman --patch=glibc && cd .. && ls
+            git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 GCC64
+            git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 GCC32
+           
+    - name: 📱 MIUI Dimensi
+      run: |
+            sed -i 's/qcom,mdss-pan-physical-width-dimension = <69>;$/qcom,mdss-pan-physical-width-dimension = <695>;/' arch/arm64/boot/dts/qcom/xiaomi/sweet/dsi-panel-k6-38-0c-0a-fhd-dsc-video.dtsi
+            sed -i 's/qcom,mdss-pan-physical-height-dimension = <154>;$/qcom,mdss-pan-physical-height-dimension = <1546>;/' arch/arm64/boot/dts/qcom/xiaomi/sweet/dsi-panel-k6-38-0c-0a-fhd-dsc-video.dtsi
+         
+    - name: ♻️ Building 
+      run: |
+           export BUILD_START=`date`
+           export PATH="${PWD}/CLANG/bin:${PWD}GCC64/bin:${PWD}GCC32/bin:$PATH"
+           export ARCH=arm64
+           export KBUILD_BUILD_USER=Wynne
+           export KBUILD_BUILD_HOST=Prjkt
+           export KBUILD_COMPILER_STRING="${PWD}/CLANG"
+           make O=out vendor/sdmsteppe-perf_defconfig
+           make O=out vendor/sweet.config
+           make -j$(nproc --all) O=out \
+                  ARCH=arm64 \
+                  LLVM=1 \
+                  LLVM_IAS=1 \
+                  AR=llvm-ar \
+                  NM=llvm-nm \
+                  LD=ld.lld \
+                  OBJCOPY=llvm-objcopy \
+                  OBJDUMP=llvm-objdump \
+                  STRIP=llvm-strip \
+                  CC=clang \
+                  CLANG_TRIPLE=aarch64-linux-gnu- \
+                  CROSS_COMPILE=aarch64-linux-gnu- \
+                  CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+                  CROSS_COMPILE_COMPAT=arm-linux-gnueabi-
+
+    - name: 🗄️ Fetch AnyKernel3
+      run: |
+           git clone --depth=1 https://github.com/Wynne3637/sweet-AnyKernel3 -b main AnyKernel3  
+           if [ -f out/arch/arm64/boot/Image.gz ]; then
+            cp out/arch/arm64/boot/Image.gz AnyKernel3/Image.gz
+           fi
+           if [ -f out/arch/arm64/boot/dtbo.img ]; then
+            cp out/arch/arm64/boot/dtbo.img AnyKernel3/dtbo.img
+           fi           
+           if [ -f out/arch/arm64/boot/dtb.img ]; then
+            cp out/arch/arm64/boot/dtb.img AnyKernel3/dtb.img
+           fi
+        
+    - name: 🚀 Upload Kernol Zip
+      uses: actions/upload-artifact@v4
+      with:
+        name: STRIX-MIUI-${{ env.BUILD_TIME }}
+        path: AnyKernel3/*
+        compression-level: 9
