@@ -38,8 +38,7 @@ jobs:
            export KBUILD_BUILD_USER=Wynne
            export KBUILD_BUILD_HOST=Prjkt
            export KBUILD_COMPILER_STRING="${PWD}/CLANG"
-           make O=out vendor/sdmsteppe-perf_defconfig
-           make O=out vendor/sweet.config
+           make O=out sweet_defconfig
            make -j$(nproc --all) O=out \
                   ARCH=arm64 \
                   LLVM=1 \
@@ -72,6 +71,6 @@ jobs:
     - name: 🚀 Upload Kernol Zip
       uses: actions/upload-artifact@v4
       with:
-        name: STRIX-MIUI-${{ env.BUILD_TIME }}
+        name: sweet-MIUI-${{ env.BUILD_TIME }}
         path: AnyKernel3/*
         compression-level: 9
