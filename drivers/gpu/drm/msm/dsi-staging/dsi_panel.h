@@ -298,8 +298,6 @@ struct dsi_panel {
 	bool fod_skip_flag; /* optimize to skip nolp command */
 	bool in_aod; /* set  DISPPARAM_DOZE_BRIGHTNESS_HBM/LBM only in AOD */
 	int doze_brightness;
-	bool is_tddi_flag;
-	bool panel_dead_flag;
 	bool panel_max_frame_rate;
 
 	bool nolp_command_set_backlight_enabled;
