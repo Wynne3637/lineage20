@@ -229,6 +229,10 @@ struct dsi_panel {
 	struct drm_panel_esd_config esd_config;
 
 	struct dsi_parser_utils utils;
+    
+    #ifdef CONFIG_TOUCHSCREEN_TDDI_DBCLK
+	bool is_tddi_flag;
+    #endif
 
 	bool lp11_init;
 	bool ulps_feature_enabled;
@@ -295,7 +299,6 @@ struct dsi_panel {
 	bool fod_skip_flag; /* optimize to skip nolp command */
 	bool in_aod; /* set  DISPPARAM_DOZE_BRIGHTNESS_HBM/LBM only in AOD */
 	int doze_brightness;
-	bool is_tddi_flag;
 	bool panel_dead_flag;
 	bool panel_max_frame_rate;
 

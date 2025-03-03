@@ -27,6 +27,8 @@
 #include "dsi_parser.h"
 #include "dsi_panel_mi.h"
 
+#ifdef CONFIG_TOUCHSCREEN_TDDI_DBCLK
+#include <linux/double_click.h>
 
 #include <drm/drm_notifier.h>
 #include <linux/fs.h>
@@ -42,7 +44,6 @@
 #endif
 
 #include <linux/export.h>
-#include <linux/double_click.h>
 #include "xiaomi_frame_stat.h"
 
 #include "exposure_adjustment.h"
@@ -473,21 +474,18 @@ static int dsi_panel_set_pinctrl_state(struct dsi_panel *panel, bool enable)
 static int dsi_panel_power_on(struct dsi_panel *panel)
 {
 	int rc = 0;
-
-	if(panel->is_tddi_flag) {
-		if(!is_tp_doubleclick_enable()||panel->panel_dead_flag) {
-			rc = dsi_pwr_enable_regulator(&panel->power_info, true);
-			if(panel->panel_dead_flag)
-				panel->panel_dead_flag = false;
-		}
-	} else {
+	bool skip_enable_regulator = false;
+     
+     #ifdef CONFIG_TOUCHSCREEN_TDDI_DBCLK
+	skip_enable_regulator = panel->is_tddi_flag && is_tp_doubleclick_enable();
+#endif
+	if (!skip_enable_regulator) {
 		rc = dsi_pwr_enable_regulator(&panel->power_info, true);
-	}
-
-	mdelay(12);
-	if (rc) {
-		pr_err("[%s] failed to enable vregs, rc=%d\n", panel->name, rc);
-		goto exit;
+		if (rc) {
+			pr_err("[%s] failed to enable vregs, rc=%d\n", panel->name, rc);
+			goto exit;
+	
+		}
 	}
 
 	rc = dsi_panel_set_pinctrl_state(panel, true);
@@ -524,22 +522,22 @@ exit:
 	return rc;
 }
 
+#ifdef CONFIG_MACH_XIAOMI_SWEET
+extern bool enable_gesture_mode;
+#endif
+
 static int dsi_panel_power_off(struct dsi_panel *panel)
 {
 	int rc = 0;
+	bool skip_reset_gpio, skip_disable_regulator = false;
 
-	if (gpio_is_valid(panel->reset_config.disp_en_gpio))
-		gpio_set_value(panel->reset_config.disp_en_gpio, 0);
-
-	if(panel->is_tddi_flag) {
-		if(!is_tp_doubleclick_enable()||panel->panel_dead_flag) {
-			if (gpio_is_valid(panel->reset_config.reset_gpio))
-				gpio_set_value(panel->reset_config.reset_gpio, 0);
-		}
-	} else {
-		if (gpio_is_valid(panel->reset_config.reset_gpio))
-			gpio_set_value(panel->reset_config.reset_gpio, 0);
-	}
+	#ifdef CONFIG_MACH_XIAOMI_SWEET
+	skip_reset_gpio = enable_gesture_mode;
+#elif defined CONFIG_TOUCHSCREEN_TDDI_DBCLK
+	skip_reset_gpio = panel->is_tddi_flag && is_tp_doubleclick_enable();
+#endif
+	if (!skip_reset_gpio && gpio_is_valid(panel->reset_config.reset_gpio))
+		gpio_set_value(panel->reset_config.reset_gpio, 0);
 
 	if (gpio_is_valid(panel->reset_config.lcd_mode_sel_gpio))
 		gpio_set_value(panel->reset_config.lcd_mode_sel_gpio, 0);
@@ -551,13 +549,10 @@ static int dsi_panel_power_off(struct dsi_panel *panel)
 	}
 	mdelay(20);
 
-	if(panel->is_tddi_flag) {
-		if(!is_tp_doubleclick_enable()||panel->panel_dead_flag) {
-			rc = dsi_pwr_enable_regulator(&panel->power_info, false);
-			if (rc)
-				pr_err("[%s] failed to enable vregs, rc=%d\n", panel->name, rc);
-		}
-	} else {
+#ifdef CONFIG_TOUCHSCREEN_TDDI_DBCLK
+	skip_disable_regulator = panel->is_tddi_flag && is_tp_doubleclick_enable();
+#endif
+	if (!skip_disable_regulator) {
 		rc = dsi_pwr_enable_regulator(&panel->power_info, false);
 		if (rc)
 			pr_err("[%s] failed to enable vregs, rc=%d\n", panel->name, rc);
@@ -2560,6 +2555,12 @@ static int dsi_panel_parse_misc_features(struct dsi_panel *panel)
 
 	panel->lp11_init = utils->read_bool(utils->data,
 			"qcom,mdss-dsi-lp11-init");
+	
+	#ifdef CONFIG_TOUCHSCREEN_TDDI_DBCLK
+	panel->is_tddi_flag = utils->read_bool(utils->data,
+			"qcom,is-tddi-flag");
+    #endif
+    
 	return 0;
 }
 
@@ -5960,47 +5961,47 @@ int panel_disp_param_send_lock(struct dsi_panel *panel, int param)
 	case DISPPARAM_QSYNC_MIN_FPS_30HZ:
 		pr_info("QSYNC:30HZ\n");
 		panel->qsync_min_fps = 30;
-		g_msm_display_info->qsync_min_fps = 30;
+		msm_display_info->qsync_min_fps = 30;
 		break;
 	case DISPPARAM_QSYNC_MIN_FPS_40HZ:
 		pr_info("QSYNC:40HZ\n");
 		panel->qsync_min_fps = 40;
-		g_msm_display_info->qsync_min_fps = 40;
+		msm_display_info->qsync_min_fps = 40;
 		break;
 	case DISPPARAM_QSYNC_MIN_FPS_50HZ:
 		pr_info("QSYNC:50HZ\n");
 		panel->qsync_min_fps = 50;
-		g_msm_display_info->qsync_min_fps = 50;
+		msm_display_info->qsync_min_fps = 50;
 		break;
 	case DISPPARAM_QSYNC_MIN_FPS_60HZ:
 		pr_info("QSYNC:60HZ\n");
 		panel->qsync_min_fps = 60;
-		g_msm_display_info->qsync_min_fps = 60;
+		msm_display_info->qsync_min_fps = 60;
 		break;
 	case DISPPARAM_QSYNC_MIN_FPS_70HZ:
 		pr_info("QSYNC:70HZ\n");
 		panel->qsync_min_fps = 70;
-		g_msm_display_info->qsync_min_fps = 70;
+		msm_display_info->qsync_min_fps = 70;
 		break;
 	case DISPPARAM_QSYNC_MIN_FPS_80HZ:
 		pr_info("QSYNC:80HZ\n");
 		panel->qsync_min_fps = 80;
-		g_msm_display_info->qsync_min_fps = 80;
+		msm_display_info->qsync_min_fps = 80;
 		break;
 	case DISPPARAM_QSYNC_MIN_FPS_90HZ:
 		pr_info("QSYNC:90HZ\n");
 		panel->qsync_min_fps = 90;
-		g_msm_display_info->qsync_min_fps = 90;
+		msm_display_info->qsync_min_fps = 90;
 		break;
 	case DISPPARAM_QSYNC_MIN_FPS_100HZ:
 		pr_info("QSYNC:100HZ\n");
 		panel->qsync_min_fps = 100;
-		g_msm_display_info->qsync_min_fps = 100;
+		msm_display_info->qsync_min_fps = 100;
 		break;
 	case DISPPARAM_QSYNC_MIN_FPS_110HZ:
 		pr_info("QSYNC:110HZ\n");
 		panel->qsync_min_fps = 110;
-		g_msm_display_info->qsync_min_fps = 110;
+		msm_display_info->qsync_min_fps = 110;
 		break;
 	default:
 		break;
