@@ -21,7 +21,7 @@ jobs:
 
     - name: ♻️ Fetch Toolchains
       run: |  
-            mkdir clang && curl  https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r547379.tar.gz -RLO && tar -C clang/ -xf clang-*.tar.gz
+            mkdir clang && cd clang && curl -LO "https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman" && chmod a+x antman && ./antman -S && ./antman --patch=glibc && cd .. && ls 
             git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 GCC64
             git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 GCC32
            
@@ -34,7 +34,6 @@ jobs:
       run: |
            export BUILD_START=`date`
            export PATH="${PWD}/clang/bin:${PWD}GCC64/bin:${PWD}GCC32/bin:$PATH"
-           export CCACHE=1
            export ARCH=arm64
            export KBUILD_BUILD_USER=Wynne
            export KBUILD_BUILD_HOST=Prjkt
@@ -43,9 +42,9 @@ jobs:
            make -j$(nproc --all) \ 
                   O=out \
                   ARCH=arm64 \
-                  CC="ccache clang"
                   LLVM=1 \
                   LLVM_IAS=1 \
+                  CC="ccache clang"
                   CLANG_TRIPLE=aarch64-linux-gnu- \
                   CROSS_COMPILE=aarch64-linux-gnu- \
                   CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
