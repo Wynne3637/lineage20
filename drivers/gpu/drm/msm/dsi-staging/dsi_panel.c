@@ -523,7 +523,7 @@ exit:
 	return rc;
 }
 
-#ifdef CONFIG_MACH_XIAOMI_SWEET
+#ifdef CONFIG_MACH_XIAOMI_VIOLET
 extern bool enable_gesture_mode;
 #endif
 
@@ -532,7 +532,7 @@ static int dsi_panel_power_off(struct dsi_panel *panel)
 	int rc = 0;
 	bool skip_reset_gpio, skip_disable_regulator = false;
 
-	#ifdef CONFIG_MACH_XIAOMI_SWEET
+#ifdef CONFIG_MACH_XIAOMI_VIOLET
 	skip_reset_gpio = enable_gesture_mode;
 #elif defined CONFIG_TOUCHSCREEN_TDDI_DBCLK
 	skip_reset_gpio = panel->is_tddi_flag && is_tp_doubleclick_enable();
