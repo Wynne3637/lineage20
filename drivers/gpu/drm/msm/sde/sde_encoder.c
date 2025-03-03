@@ -5488,8 +5488,7 @@ struct drm_encoder *sde_encoder_init_with_ops(
 	char name[SDE_NAME_SIZE];
 	int ret = 0, i, intf_index = INTF_MAX;
 	static int j = 0;
-	struct sde_encoder_phys *phys = NULL;
-	static int j = 0;
+	struct sde_encoder_phys *phys = NULL;	
 
 	sde_enc = kzalloc(sizeof(*sde_enc), GFP_KERNEL);
 	if (!sde_enc) {
