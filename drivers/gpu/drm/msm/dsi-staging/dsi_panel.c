@@ -29,6 +29,7 @@
 
 #ifdef CONFIG_TOUCHSCREEN_TDDI_DBCLK
 #include <linux/double_click.h>
+#endif
 
 #include <drm/drm_notifier.h>
 #include <linux/fs.h>
@@ -5961,47 +5962,47 @@ int panel_disp_param_send_lock(struct dsi_panel *panel, int param)
 	case DISPPARAM_QSYNC_MIN_FPS_30HZ:
 		pr_info("QSYNC:30HZ\n");
 		panel->qsync_min_fps = 30;
-		msm_display_info->qsync_min_fps = 30;
+		g_msm_display_info->qsync_min_fps = 30;
 		break;
 	case DISPPARAM_QSYNC_MIN_FPS_40HZ:
 		pr_info("QSYNC:40HZ\n");
 		panel->qsync_min_fps = 40;
-		msm_display_info->qsync_min_fps = 40;
+		g_msm_display_info->qsync_min_fps = 40;
 		break;
 	case DISPPARAM_QSYNC_MIN_FPS_50HZ:
 		pr_info("QSYNC:50HZ\n");
 		panel->qsync_min_fps = 50;
-		msm_display_info->qsync_min_fps = 50;
+		g_msm_display_info->qsync_min_fps = 50;
 		break;
 	case DISPPARAM_QSYNC_MIN_FPS_60HZ:
 		pr_info("QSYNC:60HZ\n");
 		panel->qsync_min_fps = 60;
-		msm_display_info->qsync_min_fps = 60;
+		g_msm_display_info->qsync_min_fps = 60;
 		break;
 	case DISPPARAM_QSYNC_MIN_FPS_70HZ:
 		pr_info("QSYNC:70HZ\n");
 		panel->qsync_min_fps = 70;
-		msm_display_info->qsync_min_fps = 70;
+		g_msm_display_info->qsync_min_fps = 70;
 		break;
 	case DISPPARAM_QSYNC_MIN_FPS_80HZ:
 		pr_info("QSYNC:80HZ\n");
 		panel->qsync_min_fps = 80;
-		msm_display_info->qsync_min_fps = 80;
+		g_msm_display_info->qsync_min_fps = 80;
 		break;
 	case DISPPARAM_QSYNC_MIN_FPS_90HZ:
 		pr_info("QSYNC:90HZ\n");
 		panel->qsync_min_fps = 90;
-		msm_display_info->qsync_min_fps = 90;
+		g_msm_display_info->qsync_min_fps = 90;
 		break;
 	case DISPPARAM_QSYNC_MIN_FPS_100HZ:
 		pr_info("QSYNC:100HZ\n");
 		panel->qsync_min_fps = 100;
-		msm_display_info->qsync_min_fps = 100;
+		g_msm_display_info->qsync_min_fps = 100;
 		break;
 	case DISPPARAM_QSYNC_MIN_FPS_110HZ:
 		pr_info("QSYNC:110HZ\n");
 		panel->qsync_min_fps = 110;
-		msm_display_info->qsync_min_fps = 110;
+		g_msm_display_info->qsync_min_fps = 110;
 		break;
 	default:
 		break;
