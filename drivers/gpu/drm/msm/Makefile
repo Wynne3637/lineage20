@@ -56,6 +56,7 @@ msm_drm-y := \
 	sde_hdcp_2x.o \
 	sde_dbg.o \
 	sde_dbg_evtlog.o \
+	xiaomi_frame_stat.o
 
 msm_drm-$(CONFIG_DRM_MSM_HDMI) += hdmi/hdmi.o \
 	hdmi/hdmi_audio.o \
@@ -162,6 +163,8 @@ msm_drm-$(CONFIG_DRM_MSM_DSI_STAGING) += dsi-staging/dsi_phy.o \
 				dsi-staging/dsi_display_test.o
 
 msm_drm-$(CONFIG_DSI_PARSER) += dsi-staging/dsi_parser.o
+
+msm_drm-$(CONFIG_EXPOSURE_ADJUSTMENT) += dsi-staging/exposure_adjustment.o
 
 msm_drm-$(CONFIG_DRM_MSM_DSI_PLL) += dsi/pll/dsi_pll.o \
 				dsi/pll/dsi_pll_28nm.o
