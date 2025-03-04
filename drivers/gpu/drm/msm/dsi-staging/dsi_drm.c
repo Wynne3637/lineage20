@@ -183,8 +183,18 @@ static void dsi_bridge_pre_enable(struct drm_bridge *bridge)
 {
 	int rc = 0;
 	struct dsi_bridge *c_bridge = to_dsi_bridge(bridge);
+	struct drm_device *dev = bridge->dev;
+	int event = 0;
 	struct msm_drm_notifier notify_data;
 	int power_mode;
+
+	if (dev->doze_state == MSM_DRM_BLANK_POWERDOWN) {
+		dev->doze_state = MSM_DRM_BLANK_UNBLANK;
+		pr_info("%s power on from power off\n", __func__);
+	}
+
+	event = dev->doze_state;
+	notify_data.data = &event;
 
 	if (!bridge) {
 		pr_err("Invalid params\n");
@@ -195,8 +205,6 @@ static void dsi_bridge_pre_enable(struct drm_bridge *bridge)
 		pr_err("Incorrect bridge details\n");
 		return;
 	}
-
-	atomic_set(&c_bridge->display->panel->esd_recovery_pending, 0);
 
 	power_mode = sde_connector_get_lp(c_bridge->display->drm_conn);
 	notify_data.data = &power_mode;
@@ -212,11 +220,24 @@ static void dsi_bridge_pre_enable(struct drm_bridge *bridge)
 		return;
 	}
 
-	if (c_bridge->display->is_prim_display && atomic_read(&prim_panel_is_on)) {
-		cancel_delayed_work_sync(&prim_panel_work);
-		__pm_relax(&prim_panel_wakelock);
-		return;
-	}
+	atomic_set(&c_bridge->display->panel->esd_recovery_pending, 0);
+
+	if (atomic_read(&c_bridge->display_active)) {
+	
+		cancel_delayed_work_sync(&c_bridge->pd_work);
+		
+		if (c_bridge->display->panel->panel_mode == DSI_OP_VIDEO_MODE) {
+			pr_debug("skip set display config for video panel in fpc\n");
+			return;
+		} else if (c_bridge->display->panel->panel_mode == DSI_OP_CMD_MODE &&
+			c_bridge->dsi_mode.dsi_mode_flags != DSI_MODE_FLAG_DMS) {
+			pr_debug("skip set display config because timming not switch for command panel\n");
+			return;
+		}
+
+	msm_drm_notifier_call_chain(MSM_DRM_EARLY_EVENT_BLANK, &notify_data);
+
+	atomic_set(&c_bridge->display->panel->esd_recovery_pending, 0);
 
 	if (c_bridge->dsi_mode.dsi_mode_flags &
 		(DSI_MODE_FLAG_SEAMLESS | DSI_MODE_FLAG_VRR |
@@ -242,6 +263,9 @@ static void dsi_bridge_pre_enable(struct drm_bridge *bridge)
 				c_bridge->id, rc);
 		(void)dsi_display_unprepare(c_bridge->display);
 	}
+
+	msm_drm_notifier_call_chain(MSM_DRM_EVENT_BLANK, &notify_data);
+
 	SDE_ATRACE_END("dsi_display_enable");
 
 	msm_drm_notifier_call_chain(MSM_DRM_EVENT_BLANK, &notify_data);
@@ -250,8 +274,8 @@ static void dsi_bridge_pre_enable(struct drm_bridge *bridge)
 	if (rc)
 		pr_err("Continuous splash pipeline cleanup failed, rc=%d\n",
 									rc);
-	if (c_bridge->display->is_prim_display)
-		atomic_set(&prim_panel_is_on, true);
+
+	atomic_set(&c_bridge->display_active, true);
 }
 
 int panel_disp_param_send(struct dsi_display *display, int cmd);
