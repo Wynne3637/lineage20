@@ -222,7 +222,7 @@ static void dsi_bridge_pre_enable(struct drm_bridge *bridge)
 
 	atomic_set(&c_bridge->display->panel->esd_recovery_pending, 0);
 
-	if (atomic_read(&c_bridge->display_active)) {
+	if (c_bridge->display->is_prim_display && atomic_read(&prim_panel_is_on)) {
 		cancel_delayed_work_sync(&c_bridge->pd_work);
 		if (c_bridge->display->panel->panel_mode == DSI_OP_VIDEO_MODE) {
 			pr_debug("skip set display config for video panel in fpc\n");
